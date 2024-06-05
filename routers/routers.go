@@ -1,9 +1,11 @@
 package routers
 
 import (
-	"chainup.com/node-exchange/api"
+	"bytes"
 	"chainup.com/node-exchange/middlewares"
 	"github.com/gin-gonic/gin"
+	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -25,6 +27,30 @@ func NoResponse(c *gin.Context) {
 }
 
 func initRouter(router *gin.Engine) {
-	group := router.Group("/api")
-	group.POST("/getTx", api.GetRecipet)
+	router.POST("/", proxy)
+}
+
+func proxy(c *gin.Context) {
+	reqBody, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.String(http.StatusBadGateway, err.Error())
+		return
+	}
+	request, err := http.NewRequest(http.MethodPost, "https://smart.zeniq.network:9545", bytes.NewReader(reqBody))
+	if err != nil {
+		c.String(http.StatusBadGateway, err.Error())
+		return
+	}
+	request.Header.Add("Content-Type", "application/json")
+	response, err := http.DefaultClient.Do(request)
+	if err != nil {
+		c.String(http.StatusBadGateway, err.Error())
+		return
+	}
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		c.String(http.StatusBadGateway, err.Error())
+		return
+	}
+	c.String(http.StatusOK, string(responseBody))
 }
