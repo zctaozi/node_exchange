@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	fmt.Println("node中转启动了")
+	fmt.Println("node中转启动了, 监听端口10001")
 	if err := routers.Init().Run("0.0.0.0:10001"); err != nil {
 		fmt.Println(err)
 	}
