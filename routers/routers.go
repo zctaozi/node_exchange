@@ -3,6 +3,7 @@ package routers
 import (
 	"bytes"
 	"chainup.com/node-exchange/middlewares"
+	"crypto/tls"
 	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
@@ -42,7 +43,10 @@ func proxy(c *gin.Context) {
 		return
 	}
 	request.Header.Add("Content-Type", "application/json")
-	response, err := http.DefaultClient.Do(request)
+	client := http.Client{
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+	}
+	response, err := client.Do(request)
 	if err != nil {
 		c.String(http.StatusBadGateway, err.Error())
 		return
